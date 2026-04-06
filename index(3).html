@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Fiche de Paie II — Avantages, Congés & Indexation</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1117;--bg2:#1a1a2e;--bg3:#16213e;--card:#1e1e36;--accent:#22d68a;--accent2:#19b574;--orange:#ff8a3d;--red:#ff4060;--blue:#4dabf7;--purple:#b48eff;--gold:#ffd700;--text:#eee;--text2:#999;--text3:#666;--border:#2a2a4a;--radius:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 20% 0%,rgba(34,214,138,0.06) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(255,138,61,0.04) 0%,transparent 50%);pointer-events:none;z-index:0}
+.app-header{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(15,17,23,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.app-title{font-weight:800;font-size:1.05rem}.app-title span{color:var(--accent)}
+.header-right{display:flex;align-items:center;gap:14px}
+.score-badge{font-family:'Space Mono',monospace;font-size:0.85rem;font-weight:700;color:var(--accent)}
+#globalTimer{font-family:'Space Mono',monospace;font-size:0.82rem;color:var(--text2);display:none}
+.nav-bar{display:flex;justify-content:center;gap:7px;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.nav-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.68rem;font-weight:700;cursor:pointer;transition:all 0.3s;color:var(--text2);background:transparent}
+.nav-dot:hover:not(.locked){border-color:var(--accent);color:var(--accent);transform:scale(1.1)}
+.nav-dot.active{border-color:var(--accent);background:var(--accent);color:#0f1117}
+.nav-dot.completed{border-color:var(--accent2);background:rgba(34,214,138,0.15);color:var(--accent)}
+.nav-dot.locked{opacity:0.3;cursor:not-allowed}
+.screen{display:none;max-width:820px;margin:0 auto;padding:24px 16px 100px;position:relative;z-index:1;animation:fadeIn 0.4s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:16px}
+.card-title{font-size:1.1rem;font-weight:700;margin-bottom:12px;color:var(--accent)}
+.theory-box{background:rgba(34,214,138,0.05);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:16px 20px;margin-bottom:16px;font-size:0.92rem;line-height:1.7}
+.theory-box strong{color:var(--accent)}.theory-box .hl{color:var(--orange);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;border:none;font-family:inherit;font-size:0.95rem;font-weight:700;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:var(--accent);color:#0f1117}.btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid var(--accent);color:var(--accent)}.btn-outline:hover{background:var(--accent);color:#0f1117}
+.btn-outline-orange{background:transparent;border:1px solid var(--orange);color:var(--orange)}.btn-outline-orange:hover{background:var(--orange);color:#0f1117}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.welcome-icon{font-size:3.5rem;text-align:center;margin-bottom:16px}
+.welcome-title{font-size:1.8rem;font-weight:900;text-align:center;margin-bottom:8px}
+.welcome-sub{text-align:center;color:var(--text2);font-size:0.95rem;margin-bottom:24px;line-height:1.5}
+.objectives{list-style:none}.objectives li{padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.9rem;display:flex;align-items:flex-start;gap:10px}.objectives li::before{content:'✅';flex-shrink:0}
+.email-display{text-align:center;font-size:0.82rem;color:var(--text2);margin-top:12px}.email-display strong{color:var(--accent)}
+.diff-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.diff-easy{background:rgba(34,214,138,0.15);color:var(--accent)}.diff-medium{background:rgba(255,138,61,0.15);color:var(--orange)}.diff-hard{background:rgba(255,64,96,0.15);color:var(--red)}
+.question-block{margin-bottom:20px;padding:20px;background:rgba(30,30,54,0.6);border:1px solid var(--border);border-radius:var(--radius)}
+.question-text{font-weight:600;font-size:0.95rem;margin-bottom:14px;line-height:1.5}
+.question-number{display:inline-block;background:var(--accent);color:#0f1117;font-size:0.72rem;font-weight:800;padding:3px 8px;border-radius:6px;margin-bottom:8px}
+.option-btn{display:block;width:100%;text-align:left;padding:12px 16px;margin-bottom:8px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:0.88rem;cursor:pointer;transition:all 0.2s}
+.option-btn:hover:not(.selected):not(.correct):not(.wrong){border-color:var(--accent);background:rgba(34,214,138,0.08)}
+.option-btn.selected{border-color:var(--blue);background:rgba(77,171,247,0.1)}
+.option-btn.correct{border-color:var(--accent);background:rgba(34,214,138,0.15);color:var(--accent)}
+.option-btn.wrong{border-color:var(--red);background:rgba(255,64,96,0.1);color:var(--red)}
+.option-btn:disabled{cursor:default;opacity:0.85}
+.feedback{margin-top:10px;padding:10px 14px;border-radius:8px;font-size:0.85rem;display:none;line-height:1.5}
+.feedback.show{display:block}
+.feedback.correct{background:rgba(34,214,138,0.1);border:1px solid rgba(34,214,138,0.3);color:var(--accent)}
+.feedback.wrong{background:rgba(255,64,96,0.08);border:1px solid rgba(255,64,96,0.3);color:var(--red)}
+.feedback.info{background:rgba(77,171,247,0.08);border:1px solid rgba(77,171,247,0.3);color:var(--blue);display:block}
+.calc-input{display:inline-block;width:110px;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-family:'Space Mono',monospace;font-size:0.85rem;text-align:right;outline:none;transition:border-color 0.2s}
+.calc-input:focus{border-color:var(--accent)}.calc-input.correct{border-color:var(--accent);background:rgba(34,214,138,0.1)}.calc-input.wrong{border-color:var(--red);background:rgba(255,64,96,0.08)}
+.calc-input.neutral{border-color:var(--border);background:var(--bg3)}
+.calc-wrapper{position:relative;display:inline-block}
+.calc-preview{position:absolute;bottom:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--accent);border-radius:8px;padding:4px 10px;font-family:'Space Mono',monospace;font-size:0.78rem;color:var(--accent);white-space:nowrap;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity 0.2s,transform 0.2s;z-index:10;box-shadow:0 4px 12px rgba(0,0,0,0.4)}
+.calc-preview.visible{opacity:1;transform:translateY(0)}.calc-preview.error{color:var(--text3);border-color:var(--border)}
+.match-item{display:inline-flex;align-items:center;padding:8px 14px;border-radius:8px;font-size:0.82rem;font-weight:700;cursor:pointer;transition:all 0.2s;user-select:none}
+.match-tag{background:var(--bg3);border:1px solid var(--border);color:var(--text)}.match-tag:hover{border-color:var(--accent)}.match-tag.selected-tag{border-color:var(--accent);background:rgba(34,214,138,0.12);color:var(--accent)}
+.match-zone{min-width:100px;min-height:34px;border:2px dashed var(--border);display:inline-flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;padding:4px 10px;color:var(--text3);font-size:0.8rem;border-radius:8px;cursor:pointer;transition:all 0.2s}
+.match-zone:hover:not(.zone-correct){border-color:var(--accent);background:rgba(34,214,138,0.04)}
+.match-zone.zone-filled{border-style:solid;border-color:var(--accent);color:var(--accent);background:rgba(34,214,138,0.08)}
+.match-zone.zone-correct{border-color:var(--accent);background:rgba(34,214,138,0.15);color:var(--accent);cursor:default}
+.match-zone.zone-wrong{border-color:var(--red);background:rgba(255,64,96,0.1);color:var(--red)}
+.result-circle{width:140px;height:140px;border-radius:50%;margin:0 auto 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Space Mono',monospace}
+.result-pct{font-size:2.2rem;font-weight:800}.result-label{font-size:0.72rem;color:var(--text2);margin-top:2px}
+.data-table{width:100%;border-collapse:collapse;font-size:0.82rem}
+.data-table th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text2);font-weight:600;font-size:0.72rem;text-transform:uppercase}
+.data-table td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.03)}
+.attempts-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;background:rgba(77,171,247,0.12);color:var(--blue);border:1px solid rgba(77,171,247,0.3)}
+/* Payslip reference */
+.ref-slip{background:#1c1c32;border:1px solid var(--border);border-radius:var(--radius);font-size:0.78rem;overflow-x:auto;margin-bottom:16px}
+.ref-slip-header{padding:12px 16px;border-bottom:1px solid var(--border)}
+.ref-slip table{width:100%;border-collapse:collapse;min-width:480px}
+.ref-slip th{text-align:left;padding:5px 10px;color:var(--text3);font-size:0.68rem;background:rgba(34,214,138,0.04)}
+.ref-slip td{padding:4px 10px;border-bottom:1px solid rgba(255,255,255,0.02)}
+.ref-slip .recap{display:grid;grid-template-columns:repeat(auto-fit,minmax(72px,1fr));gap:1px;background:var(--border)}
+.ref-slip .recap>div{background:var(--card);padding:6px 8px;text-align:center}
+.ref-slip .recap .lbl{font-size:0.6rem;color:var(--text3)}.ref-slip .recap .val{font-weight:700;font-size:0.82rem}
+.vac-table{width:100%;border-collapse:collapse;font-size:0.82rem;margin:12px 0}
+.vac-table th,.vac-table td{padding:8px 12px;border:1px solid var(--border);text-align:center}
+.vac-table th{background:rgba(34,214,138,0.06);color:var(--accent);font-weight:700;font-size:0.75rem}
+.vac-table td{color:var(--text)}
+@media(max-width:600px){.screen{padding:16px 12px 80px}.card{padding:16px}.welcome-title{font-size:1.4rem}.calc-input{width:85px}}
+</style>
+</head>
+<body>
+<header class="app-header"><div class="app-title">📋 <span>Fiche de Paie</span> II</div><div class="header-right"><span id="globalTimer">⏱️ 00:00</span><span class="score-badge" id="scoreBadge">⭐ 0 pts</span></div></header>
+<nav class="nav-bar" id="navBar"></nav>
+
+<!-- SCREEN 0 : ACCUEIL -->
+<div class="screen active" id="screen-0">
+  <div class="welcome-icon">📋</div>
+  <div class="welcome-title">La Fiche de Paie II</div>
+  <div class="welcome-sub">Avantages en nature, congés, indexation et synthèse complète</div>
+  <div class="card"><div class="card-title">🎯 Objectifs</div><ul class="objectives">
+    <li>Comprendre les avantages en nature et les chèques-repas</li>
+    <li>Maîtriser le droit aux congés payés et les vacances jeunes</li>
+    <li>Calculer les jours de congé à partir du tableau officiel</li>
+    <li>Expliquer l'indexation automatique des salaires</li>
+    <li>Reconstituer le schéma complet : du salaire coût au net</li>
+    <li>Compléter les fiches récapitulatives d'Emma et Hugo</li>
+  </ul></div>
+  <div class="card"><div class="card-title">📊 Niveaux</div><div id="levelList"></div></div>
+  <div style="display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;">
+    <button class="btn btn-primary" onclick="goToExercise(1)">🚀 Commencer</button>
+    <button class="btn btn-outline" onclick="openLB('app')">🏆 Classement</button>
+    <button class="btn btn-outline-orange" onclick="openLB('global')">🌍 Général</button>
+  </div>
+  <div class="email-display" id="emailDisplay"></div>
+</div>
+
+<!-- SCREEN 1 : Avantages en nature + Chèques-repas -->
+<div class="screen" id="screen-1">
+  <span class="diff-badge diff-easy">Facile</span>
+  <h2 style="font-size:1.3rem;font-weight:800;margin:8px 0 16px;">Niveau 1 — Avantages en nature & Chèques-repas</h2>
+  <div class="theory-box">
+    <strong>🎁 Les avantages en nature</strong><br>
+    En plus du salaire, l'employeur peut octroyer des avantages :<br>
+    • <strong>📱 Outils de fonction</strong> (smartphone, PC…) : <span class="hl">avantage toute nature</span> si usage privé → diminue le net.<br>
+    • <strong>🚗 Voiture de société :</strong> réservée aux <strong>fonctions commerciales</strong>. ATN car usage privé possible.<br>
+    • L'employeur doit respecter l'<strong>égalité entre travailleurs</strong> de même statut.<br><br>
+    <strong>🍽️ Les chèques-repas en détail</strong><br>
+    C'est l'avantage le plus courant. Les deux parties contribuent :<br><br>
+    <table style="width:100%;border-collapse:collapse;font-size:0.88rem;margin:8px 0;">
+      <tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:6px 0;color:var(--orange);">Part employeur (max)</th><th style="text-align:left;padding:6px 0;color:var(--accent);">Part travailleur (min)</th><th style="text-align:left;padding:6px 0;">Valeur faciale</th></tr>
+      <tr><td style="padding:6px 0;"><span class="hl">6,91 €</span> max</td><td style="padding:6px 0;"><strong>1,09 €</strong> min</td><td style="padding:6px 0;">jusqu'à <strong>8,00 €</strong></td></tr>
+    </table>
+    <br>
+    <strong>Exemple :</strong> Si tu reçois un chèque-repas de <span class="hl">8,00 €</span> par jour presté :<br>
+    → L'employeur paie <span class="hl">6,91 €</span> par chèque<br>
+    → Tu paies <strong>1,09 €</strong> par chèque (déduit de ton net)<br>
+    → Pour 20 jours prestés : tu paies 20 × 1,09 = <strong>21,80 €</strong> de ton salaire net<br>
+    → Mais tu reçois 20 × 8,00 = <strong>160,00 €</strong> en chèques-repas !<br><br>
+    ⚠️ Les chèques-repas sont <strong>exonérés de cotisations ONSS et d'impôts</strong> si les conditions légales sont respectées. C'est un gain net pour le travailleur.
+  </div>
+  <div id="quiz1"></div>
+  <div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" id="ex1Check" onclick="checkQuiz(1)">✅ Vérifier mes réponses</button></div>
+</div>
+
+<!-- SCREEN 2 : Les congés -->
+<div class="screen" id="screen-2">
+  <span class="diff-badge diff-easy">Facile</span>
+  <h2 style="font-size:1.3rem;font-weight:800;margin:8px 0 16px;">Niveau 2 — Les congés</h2>
+  <div class="theory-box">
+    <strong>🏖️ Les congés payés</strong><br>
+    Tout travailleur a droit à <span class="hl">20 jours de congé payés par an</span> (temps plein, régime 5 jours). Les congés dépendent des <strong>prestations de l'année précédente</strong>.<br><br>
+    ➡️ <strong>Première année de travail : pas de congé payé !</strong><br><br>
+    <strong>Paiement :</strong> Ouvriers → <span class="hl">ONVA</span> | Employés → directement par l'employeur<br><br>
+    <strong>📅 10 jours fériés</strong> par an, rémunérés. Si un férié tombe un dimanche → <strong>jour de remplacement</strong>.<br><br>
+    <strong>🎓 Vacances jeunes :</strong> jeune < 25 ans ayant terminé ses études + travaillé au moins 1 mois → allocation <span class="hl">ONEM</span> de 65 % du salaire plafonné (précompte 10,09 %).
+  </div>
+  <div id="quiz2"></div>
+  <div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" id="ex2Check" onclick="checkQuiz(2)">✅ Vérifier mes réponses</button></div>
+</div>
+
+<!-- SCREEN 3 : Congés Emma/Hugo + Tableau + Calcul -->
+<div class="screen" id="screen-3">
+  <span class="diff-badge diff-medium">Moyen</span>
+  <h2 style="font-size:1.3rem;font-weight:800;margin:8px 0 16px;">Niveau 3 — Calcul des congés</h2>
+  <div class="theory-box">
+    <strong>📅 Application : Emma et Hugo chez Belvas</strong><br>
+    Entrés le 01/11/2017 → 2 mois prestés en 2017 → <span class="hl">4 jours de congé en 2018</span> (régime 5 jours) + 10 fériés + possibilité de <strong>vacances jeunes</strong>.<br>
+    Chez Belvas : congés uniquement du <strong>lendemain de Pâques au 31 août</strong>.
+  </div>
+  <div class="card">
+    <div class="card-title">📊 Tableau officiel des jours de congé</div>
+    <p style="color:var(--text2);font-size:0.85rem;margin-bottom:12px;">Nombre de jours de vacances selon les mois prestés l'année précédente :</p>
+    <div style="overflow-x:auto;">
+      <table class="vac-table">
+        <thead><tr><th>Mois prestés (N−1)</th><th>Régime 5 jours</th><th>Régime 6 jours</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>2</td><td>2</td></tr>
+          <tr><td>2</td><td>4</td><td>4</td></tr>
+          <tr><td>3</td><td>5</td><td>6</td></tr>
+          <tr><td>4</td><td>7</td><td>8</td></tr>
+          <tr><td>5</td><td>9</td><td>10</td></tr>
+          <tr><td>6</td><td>10</td><td>12</td></tr>
+          <tr><td>7</td><td>12</td><td>14</td></tr>
+          <tr><td>8</td><td>14</td><td>16</td></tr>
+          <tr><td>9</td><td>15</td><td>18</td></tr>
+          <tr><td>10</td><td>17</td><td>20</td></tr>
+          <tr><td>11</td><td>19</td><td>22</td></tr>
+          <tr><td>12</td><td>20</td><td>24</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div id="quiz3"></div>
+  <div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" id="ex3Check" onclick="checkQuiz(3)">✅ Vérifier mes réponses</button></div>
+</div>
+
+<!-- SCREEN 4 : Indexation -->
+<div class="screen" id="screen-4">
+  <span class="diff-badge diff-medium">Moyen</span>
+  <h2 style="font-size:1.3rem;font-weight:800;margin:8px 0 16px;">Niveau 4 — L'indexation des salaires</h2>
+  <div class="theory-box">
+    <strong>📈 Pouvoir d'achat et inflation</strong><br>
+    Le <strong>pouvoir d'achat</strong> = quantité de biens qu'un revenu permet d'obtenir. Dépend du <span class="hl">revenu</span> et des <span class="hl">prix</span>.<br>
+    L'<strong>inflation</strong> = hausse généralisée et persistante des prix. Si salaire stable + inflation → pouvoir d'achat ↓<br><br>
+    <strong>🇧🇪 Indexation automatique</strong> (Belgique et Luxembourg uniquement) : salaires adaptés automatiquement à l'inflation.<br>
+    Limites : <strong>saut d'index</strong> (on saute une augmentation) | <strong>indice santé</strong> (exclut alcool, tabac, pétrole).
+  </div>
+  <div id="quiz4"></div>
+  <div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" id="ex4Check" onclick="checkQuiz(4)">✅ Vérifier mes réponses</button></div>
+</div>
+
+<!-- SCREEN 5 : Schéma brut→net -->
+<div class="screen" id="screen-5">
+  <span class="diff-badge diff-medium">Moyen</span>
+  <h2 style="font-size:1.3rem;font-weight:800;margin:8px 0 16px;">Niveau 5 — Le schéma de la fiche de paie</h2>
+  <div class="theory-box">
+    <strong>🔄 Du salaire coût au salaire net</strong><br>
+    <strong>Salaire coût</strong> = Brut + Cotis. patronales (ce que paie l'employeur)<br>
+    <strong>Salaire brut</strong> = sur ton contrat → on déduit cotis. ONSS perso (13,07%)<br>
+    <strong>Salaire imposable</strong> = Brut − ONSS + Bonus emploi → on déduit le précompte (avance impôt)<br>
+    <strong>Salaire net</strong> = ce que tu reçois en main 💰
+  </div>
+  <div class="card">
+    <div class="card-title">🧩 Place chaque terme au bon endroit</div>
+    <p style="color:var(--text3);font-size:0.8rem;margin-bottom:16px;">💡 Clique un terme puis clique la zone « ? ». Clique une zone remplie pour la vider.</p>
+    <div id="schemaTagsContainer" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;"></div>
+    <div style="background:#1c1c32;border:1px solid var(--border);border-radius:var(--radius);padding:20px;overflow-x:auto;">
+      <div style="min-width:440px;">
+        <div style="border:2px solid var(--orange);border-radius:12px;padding:14px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;"><span class="match-zone" data-answer="Salaire coût" id="sz-cout">?</span><span style="color:var(--text3);font-size:0.75rem;">= Brut + Cotis. patronales</span></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="border:1px solid var(--red);border-radius:10px;padding:10px;text-align:center;"><span class="match-zone" data-answer="Cotisations patronales" id="sz-patr">?</span><div style="font-size:0.68rem;color:var(--text3);margin-top:3px;">25%</div></div>
+            <div style="border:2px solid var(--accent);border-radius:10px;padding:12px;flex:1;min-width:240px;">
+              <div style="margin-bottom:8px;"><span class="match-zone" data-answer="Salaire brut" id="sz-brut">?</span></div>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <div style="border:1px solid var(--purple);border-radius:8px;padding:8px;text-align:center;"><span class="match-zone" data-answer="Cotisations personnelles" id="sz-perso">?</span><div style="font-size:0.68rem;color:var(--text3);margin-top:2px;">13,07%</div></div>
+                <div style="border:1px solid var(--blue);border-radius:8px;padding:8px;flex:1;min-width:160px;">
+                  <div style="margin-bottom:6px;"><span class="match-zone" data-answer="Salaire imposable" id="sz-impos">?</span></div>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                    <div style="border:1px dashed var(--red);border-radius:6px;padding:6px;text-align:center;"><span class="match-zone" data-answer="Précompte professionnel" id="sz-pp">?</span><div style="font-size:0.65rem;color:var(--text3);margin-top:2px;">Avance impôt</div></div>
+                    <div style="border:1px solid var(--gold);border-radius:6px;padding:6px;text-align:center;flex:1;"><span class="match-zone" data-answer="Salaire net" id="sz-net">?</span><div style="font-size:0.65rem;color:var(--text3);margin-top:2px;">💰 En main</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="ex5Feedback" style="margin-top:16px;"></div>
+    <div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" id="ex5Check" onclick="checkSchema()">✅ Vérifier</button></div>
+  </div>
+</div>
+
+<!-- SCREEN 6 : Fiche Emma — 3 tentatives -->
+<div class="screen" id="screen-6">
+  <span class="diff-badge diff-hard">Difficile</span>
+  <h2 style="font-size:1.3rem;font-weight:800;margin:8px 0 16px;">Niveau 6 — Fiche récapitulative d'Emma</h2>
+  <div class="theory-box">Complète le tableau à partir de la fiche de paie d'Emma ci-dessous.<br><em style="color:var(--text3);">Tu as <strong>3 tentatives</strong>. 1re bonne réponse = max pts | 2e ou 3e = 50% | Après la 3e, les réponses s'affichent.</em></div>
+  <!-- Emma payslip reference -->
+  <div class="ref-slip">
+    <div class="ref-slip-header">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div><div style="font-weight:700;color:var(--orange);font-size:0.88rem;">SSE Entraide 924</div><div style="color:var(--text3);font-size:0.72rem;">Colonel Bourg 113 — 1140 EVERE</div><div style="font-weight:800;color:var(--accent);margin-top:4px;">FICHE DE PAIE (7544/1069)</div><div style="color:var(--text2);font-size:0.72rem;">01/11/2017 — 30/11/2017</div></div>
+        <div style="background:rgba(34,214,138,0.08);border:1px solid rgba(34,214,138,0.2);border-radius:8px;padding:8px 12px;"><div style="font-weight:700;">👔 Emma Tomson — EMPLOYÉE</div><div style="color:var(--text2);font-size:0.72rem;">BELVAS SPRL — Salaire mensuel : 2 000,00 € — CP 201</div></div>
+      </div>
+    </div>
+    <table>
+      <tr><th>CODE</th><th>RUBRIQUE</th><th style="text-align:right;">NOMBRE</th><th style="text-align:right;">BASE</th><th style="text-align:right;">BRUT</th><th style="text-align:right;">H.ONSS</th><th style="text-align:right;">H.PP</th></tr>
+      <tr><td>101</td><td>JOURS PRESTÉS</td><td style="text-align:right;">20,00</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>199</td><td>JOURS DE PRÉSENCE</td><td style="text-align:right;">20,00</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>1102</td><td>JOURS FÉRIÉS</td><td style="text-align:right;">2,00</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>1101</td><td>HEURES PRESTÉES</td><td style="text-align:right;">160,00</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>2101</td><td style="font-weight:600;">APPOINTEMENT</td><td></td><td></td><td style="text-align:right;font-weight:700;color:var(--accent);">2 000,00</td><td></td><td></td></tr>
+      <tr><td>2274</td><td>BONUS EMPLOI</td><td></td><td></td><td></td><td style="text-align:right;color:var(--orange);">101,18</td><td></td></tr>
+      <tr><td>2393</td><td>FRAIS DEPLA/JOUR NET</td><td style="text-align:right;">20,00</td><td style="text-align:right;">0,8000</td><td></td><td></td><td style="text-align:right;color:var(--blue);">16,00</td></tr>
+      <tr><td>2344</td><td>FRAIS DE REPRÉSENTATION</td><td></td><td></td><td></td><td></td><td style="text-align:right;color:var(--blue);">125,00</td></tr>
+      <tr><td>2395</td><td>RETENU LOI-PROG. SOC.</td><td></td><td></td><td></td><td></td><td style="text-align:right;color:var(--red);">- 4,15</td></tr>
+    </table>
+    <div class="recap" style="border-top:2px solid var(--accent);">
+      <div><div class="lbl">BRUT</div><div class="val" style="color:var(--accent);">2 000,00</div></div>
+      <div><div class="lbl">BRUT-108</div><div class="val">2 000,00</div></div>
+      <div><div class="lbl">ONSS</div><div class="val" style="color:var(--red);">261,40</div></div>
+      <div><div class="lbl">H.ONSS</div><div class="val" style="color:var(--orange);">101,18</div></div>
+      <div><div class="lbl">IMPOS</div><div class="val">1 839,78</div></div>
+      <div><div class="lbl">PP</div><div class="val" style="color:var(--red);">289,80</div></div>
+      <div><div class="lbl">H.PP</div><div class="val" style="color:var(--blue);">136,85</div></div>
+      <div><div class="lbl">ACOMPTE</div><div class="val">0,00</div></div>
+      <div><div class="lbl">NET</div><div class="val" style="color:var(--accent);">1 686,83</div></div>
+    </div>
+  </div>
+  <!-- Table to fill -->
+  <div class="card" style="overflow-x:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div class="card-title" style="margin-bottom:0;">📝 Complète le récapitulatif d'Emma</div>
+      <span class="attempts-badge" id="emmaAttempts">Tentative 1/3</span>
+    </div>
+    <table class="data-table" id="emmaTable" style="min-width:400px;">
+      <thead><tr><th>Élément</th><th>Montant (€)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Salaire brut</strong></td><td><input type="text" class="calc-input emma-field" data-answer="2000" data-label="2 000,00" placeholder="€"></td></tr>
+        <tr><td><strong>Cotis. ONSS perso</strong> <span style="color:var(--text3);font-size:0.75rem;">13,07%</span></td><td><input type="text" class="calc-input emma-field" data-answer="261.40" data-label="261,40" placeholder="€"></td></tr>
+        <tr><td><strong>Bonus emploi</strong> <span style="color:var(--text3);font-size:0.75rem;">Hors ONSS</span></td><td><input type="text" class="calc-input emma-field" data-answer="101.18" data-label="101,18" placeholder="€"></td></tr>
+        <tr><td><strong>Salaire imposable</strong></td><td><input type="text" class="calc-input emma-field" data-answer="1839.78" data-tolerance="2" data-label="1 839,78" placeholder="€"></td></tr>
+        <tr><td><strong>Précompte professionnel</strong></td><td><input type="text" class="calc-input emma-field" data-answer="289.80" data-label="289,80" placeholder="€"></td></tr>
+        <tr><td><strong>Frais de déplacement</strong></td><td><input type="text" class="calc-input emma-field" data-answer="16" data-label="16,00" placeholder="€"></td></tr>
+        <tr><td><strong>Frais de représentation</strong></td><td><input type="text" class="calc-input emma-field" data-answer="125" data-label="125,00" placeholder="€"></td></tr>
+        <tr><td><strong>Retenue loi-prog.</strong></td><td><input type="text" class="calc-input emma-field" data-answer="4.15" data-tolerance="0.1" data-label="4,15" placeholder="€"></td></tr>
+        <tr style="background:rgba(34,214,138,0.06);"><td><strong style="color:var(--accent);">💰 Salaire net</strong></td><td><input type="text" class="calc-input emma-field" data-answer="1686.83" data-tolerance="1" data-label="1 686,83" placeholder="€"></td></tr>
+        <tr style="border-top:2px solid var(--orange);"><td><strong style="color:var(--orange);">Cotis. patronales</strong> <span style="color:var(--text3);font-size:0.75rem;">25%</span></td><td><input type="text" class="calc-input emma-field" data-answer="500" data-label="500,00" placeholder="€"></td></tr>
+        <tr style="background:rgba(255,138,61,0.06);"><td><strong style="color:var(--orange);">🏭 Coût salarial total</strong></td><td><input type="text" class="calc-input emma-field" data-answer="2500" data-label="2 500,00" placeholder="€"></td></tr>
+      </tbody>
+    </table>
+    <div id="emmaFeedback" style="margin-top:12px;"></div>
+    <div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" id="ex6Check" onclick="checkPayslipTable('emma')">✅ Vérifier</button></div>
+  </div>
+</div>
+
+<!-- SCREEN 7 : Fiche Hugo — 3 tentatives -->
+<div class="screen" id="screen-7">
+  <span class="diff-badge diff-hard">Difficile</span>
+  <h2 style="font-size:1.3rem;font-weight:800;margin:8px 0 16px;">Niveau 7 — Fiche récapitulative d'Hugo</h2>
+  <div class="theory-box">Complète le tableau à partir de la fiche de paie d'Hugo ci-dessous.<br><em style="color:var(--text3);">⚠️ Hugo est <strong>ouvrier</strong> : les cotisations se calculent sur <span class="hl">108 % du brut</span> !</em></div>
+  <!-- Hugo payslip reference -->
+  <div class="ref-slip">
+    <div class="ref-slip-header">
+      <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div><div style="font-weight:700;color:var(--orange);font-size:0.88rem;">SSE Entraide 924</div><div style="color:var(--text3);font-size:0.72rem;">Colonel Bourg 113 — 1140 EVERE</div><div style="font-weight:800;color:var(--orange);margin-top:4px;">FICHE DE PAIE (7544/1051)</div><div style="color:var(--text2);font-size:0.72rem;">01/11/2017 — 30/11/2017</div></div>
+        <div style="background:rgba(255,138,61,0.08);border:1px solid rgba(255,138,61,0.2);border-radius:8px;padding:8px 12px;"><div style="font-weight:700;">👷 Hugo Devosse — OUVRIER</div><div style="color:var(--text2);font-size:0.72rem;">BELVAS SPRL — Sal. horaire : 13,00 € × 160h — CP 118.03</div></div>
+      </div>
+    </div>
+    <table>
+      <tr><th>CODE</th><th>RUBRIQUE</th><th style="text-align:right;">NOMBRE</th><th style="text-align:right;">BASE</th><th style="text-align:right;">BRUT</th><th style="text-align:right;">H.ONSS</th><th style="text-align:right;">H.PP</th></tr>
+      <tr><td>101</td><td>JOURS PRESTÉS</td><td style="text-align:right;">20,00</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>199</td><td>JOURS DE PRÉSENCE</td><td style="text-align:right;">20,00</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>1102</td><td>JOURS FÉRIÉS</td><td style="text-align:right;">2,00</td><td></td><td></td><td></td><td></td></tr>
+      <tr><td>1101</td><td>HEURES PRESTÉES</td><td style="text-align:right;">160,00</td><td style="text-align:right;">13,0000</td><td style="text-align:right;font-weight:700;color:var(--accent);">2 080,00</td><td></td><td></td></tr>
+      <tr><td>2274</td><td>BONUS EMPLOI</td><td></td><td></td><td></td><td style="text-align:right;color:var(--orange);">90,34</td><td></td></tr>
+      <tr><td>2393</td><td>FRAIS DEPLA/JOUR NET</td><td style="text-align:right;">20,00</td><td style="text-align:right;">2,4000</td><td></td><td></td><td style="text-align:right;color:var(--blue);">48,00</td></tr>
+      <tr><td>2395</td><td>RETENU LOI-PROG. SOC.</td><td></td><td></td><td></td><td></td><td style="text-align:right;color:var(--red);">-19,22</td></tr>
+    </table>
+    <div class="recap" style="border-top:2px solid var(--orange);">
+      <div><div class="lbl">BRUT</div><div class="val" style="color:var(--accent);">2 080,00</div></div>
+      <div><div class="lbl">BRUT-108</div><div class="val" style="color:var(--orange);">2 246,40</div></div>
+      <div><div class="lbl">ONSS</div><div class="val" style="color:var(--red);">293,60</div></div>
+      <div><div class="lbl">H.ONSS</div><div class="val" style="color:var(--orange);">90,34</div></div>
+      <div><div class="lbl">IMPOS</div><div class="val">1 876,74</div></div>
+      <div><div class="lbl">PP</div><div class="val" style="color:var(--red);">313,86</div></div>
+      <div><div class="lbl">H.PP</div><div class="val" style="color:var(--blue);">28,78</div></div>
+      <div><div class="lbl">ACOMPTE</div><div class="val">500,00</div></div>
+      <div><div class="lbl">NET</div><div class="val" style="color:var(--accent);">1 591,66</div></div>
+    </div>
+    <div style="padding:6px 14px;color:var(--text3);font-size:0.7rem;font-style:italic;">Net à payer (après acompte) : 1 091,66 €</div>
+  </div>
+  <div class="card" style="overflow-x:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div class="card-title" style="margin-bottom:0;">📝 Complète le récapitulatif d'Hugo</div>
+      <span class="attempts-badge" id="hugoAttempts">Tentative 1/3</span>
+    </div>
+    <table class="data-table" id="hugoTable" style="min-width:400px;">
+      <thead><tr><th>Élément</th><th>Montant (€)</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Salaire brut</strong> <span style="color:var(--text3);font-size:0.75rem;">13 € × 160h</span></td><td><input type="text" class="calc-input hugo-field" data-answer="2080" data-label="2 080,00" placeholder="€"></td></tr>
+        <tr><td><strong>Cotis. ONSS perso</strong> <span style="color:var(--text3);font-size:0.75rem;">13,07% sur 108%</span></td><td><input type="text" class="calc-input hugo-field" data-answer="293.60" data-tolerance="1" data-label="293,60" placeholder="€"></td></tr>
+        <tr><td><strong>Bonus emploi</strong></td><td><input type="text" class="calc-input hugo-field" data-answer="90.34" data-label="90,34" placeholder="€"></td></tr>
+        <tr><td><strong>Salaire imposable</strong></td><td><input type="text" class="calc-input hugo-field" data-answer="1876.74" data-tolerance="2" data-label="1 876,74" placeholder="€"></td></tr>
+        <tr><td><strong>Précompte professionnel</strong></td><td><input type="text" class="calc-input hugo-field" data-answer="313.86" data-label="313,86" placeholder="€"></td></tr>
+        <tr><td><strong>Frais de déplacement</strong></td><td><input type="text" class="calc-input hugo-field" data-answer="48" data-label="48,00" placeholder="€"></td></tr>
+        <tr><td><strong>Retenue loi-prog.</strong></td><td><input type="text" class="calc-input hugo-field" data-answer="19.22" data-tolerance="0.1" data-label="19,22" placeholder="€"></td></tr>
+        <tr style="background:rgba(34,214,138,0.06);"><td><strong style="color:var(--accent);">💰 Salaire net</strong></td><td><input type="text" class="calc-input hugo-field" data-answer="1591.66" data-tolerance="1" data-label="1 591,66" placeholder="€"></td></tr>
+        <tr style="border-top:2px solid var(--orange);"><td><strong style="color:var(--orange);">Cotis. patronales</strong> <span style="color:var(--text3);font-size:0.75rem;">25% sur 108%</span></td><td><input type="text" class="calc-input hugo-field" data-answer="561.60" data-tolerance="1" data-label="561,60" placeholder="€"></td></tr>
+        <tr style="background:rgba(255,138,61,0.06);"><td><strong style="color:var(--orange);">🏭 Coût salarial total</strong></td><td><input type="text" class="calc-input hugo-field" data-answer="2641.60" data-tolerance="2" data-label="2 641,60" placeholder="€"></td></tr>
+      </tbody>
+    </table>
+    <div id="hugoFeedback" style="margin-top:12px;"></div>
+    <div style="text-align:center;margin-top:16px;"><button class="btn btn-primary" id="ex7Check" onclick="checkPayslipTable('hugo')">✅ Vérifier</button></div>
+  </div>
+</div>
+
+<!-- SCREEN 8 : RÉSULTATS -->
+<div class="screen" id="screen-8">
+  <div style="text-align:center;">
+    <div style="font-size:3rem;margin-bottom:8px;" id="resultEmoji">🎉</div>
+    <h2 style="font-size:1.5rem;font-weight:900;margin-bottom:20px;">Résultats finaux</h2>
+    <div class="result-circle" id="resultCircle"><div class="result-pct" id="resultPct">0%</div><div class="result-label">de réussite</div></div>
+    <div id="resultDetails" style="margin-bottom:24px;"></div>
+    <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-primary" onclick="restartGame()">🔄 Rejouer</button>
+      <button class="btn btn-outline" onclick="openLB('app')">🏆 Classement</button>
+      <button class="btn btn-outline-orange" onclick="openLB('global')">🌍 Général</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div id="emailOverlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;">
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;max-width:420px;width:90%;text-align:center;box-shadow:0 0 40px rgba(0,0,0,0.5);">
+    <div style="font-size:2rem;margin-bottom:12px;">🎓</div><h2 style="font-size:1.3rem;margin-bottom:4px;">Identification</h2>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:20px;">Entre ton adresse email scolaire pour commencer.</p>
+    <input type="email" id="emailInput" placeholder="prenom.nom@eleve.istlm.be" style="width:100%;padding:12px 16px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:1rem;outline:none;margin-bottom:12px;font-family:inherit;" onkeydown="if(event.key==='Enter')validateEmail()">
+    <div id="emailError" style="color:#ff4060;font-size:0.82rem;margin-bottom:12px;min-height:1.2em;"></div>
+    <button id="emailBtn" onclick="validateEmail()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#0f1117;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;">✅ Vérifier et commencer</button>
+  </div>
+</div>
+<div id="lbOverlay" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);" onclick="if(event.target===this)closeLB()">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:95%;max-width:600px;max-height:85vh;overflow-y:auto;box-shadow:0 0 40px rgba(0,0,0,0.5);">
+    <button onclick="closeLB()" style="position:absolute;top:12px;right:12px;background:none;border:none;color:var(--text2);font-size:1.5rem;cursor:pointer;">✕</button>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button id="lbTabApp" onclick="switchLBTab('app')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--accent);background:var(--accent);color:#0f1117;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.85rem;">🏆 Cette app</button>
+      <button id="lbTabGlobal" onclick="switchLBTab('global')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--orange);background:transparent;color:var(--orange);font-weight:700;cursor:pointer;font-family:inherit;font-size:0.85rem;">🌍 Général</button>
+    </div>
+    <div id="lbContent"><div style="text-align:center;padding:40px;color:var(--text2);">Chargement…</div></div>
+  </div>
+</div>
+
+<script>
+const EXERCISES=[{title:"Accueil",maxPoints:0},{title:"Niveau 1 — Avantages & Chèques-repas",maxPoints:21},{title:"Niveau 2 — Les congés",maxPoints:15},{title:"Niveau 3 — Calcul des congés",maxPoints:18},{title:"Niveau 4 — L'indexation",maxPoints:15},{title:"Niveau 5 — Schéma brut→net",maxPoints:14},{title:"Niveau 6 — Fiche d'Emma",maxPoints:22},{title:"Niveau 7 — Fiche d'Hugo",maxPoints:20}];
+const TOTAL_EX=EXERCISES.length-1;
+const APP={currentScreen:0,score:0,maxScore:EXERCISES.reduce((s,e)=>s+e.maxPoints,0),completed:new Set(),completedExercises:[],email:localStorage.getItem('student_email')||'',classe:localStorage.getItem('student_classe')||'',exerciseStartTime:null,exerciseTimes:{},exerciseScores:{},scoreBeforeExercise:0,globalTimerStart:null,globalTimerInterval:null,selectedSchemaTag:null};
+const TRACKING={appName:"La Fiche de Paie II",totalNiveaux:TOTAL_EX,sessionId:null,scriptUrl:"https://script.google.com/macros/s/AKfycbx9bRMVuHU2mgFLii1KcQXD3LdZahnDH1rf1cWv9RuDvQAt0l3VtLtxzmbH7MtpJWRjfA/exec"};
+
+// Payslip attempt trackers
+const payslipAttempts={emma:{current:1,max:3,done:false},hugo:{current:1,max:3,done:false}};
+
+const QUIZZES={
+1:[
+  {q:"Sur les fiches de paie d'Emma et Hugo, quel avantage commun bénéficient-ils ?",opts:["Des chèques-repas","Le remboursement des frais de déplacement domicile-travail","Une voiture de société","Un smartphone de fonction"],correct:1,explain:"Les deux bénéficient du remboursement des frais de déplacement (code 2393). Emma a en plus des frais de représentation."},
+  {q:"La voiture de société est généralement réservée à :",opts:["Tous les travailleurs","Les fonctions commerciales","Les ouvriers uniquement","Les cadres supérieurs"],correct:1,explain:"La voiture de société est réservée aux fonctions commerciales nécessitant de nombreux déplacements."},
+  {q:"Pour un chèque-repas de 8,00 €, quelle est la part maximale de l'employeur ?",opts:["4,00 €","5,50 €","6,91 €","8,00 €"],correct:2,explain:"La part employeur est de maximum 6,91 €. Le travailleur paie au minimum 1,09 € (8,00 − 6,91 = 1,09 €)."},
+  {q:"Un travailleur preste 22 jours par mois et reçoit des chèques-repas de 8 €. Combien paie-t-il de sa poche si sa part est de 1,09 € ?",opts:["17,44 €","21,80 €","23,98 €","26,18 €"],correct:2,explain:"22 jours × 1,09 € = 23,98 €. Attention : ici il preste 22 jours (pas 20). Mais la réponse la plus proche pour 20 jours serait 20 × 1,09 = 21,80 €. Le calcul exact donne 22 × 1,09 = 23,98 €."},
+  {q:"Pourquoi les chèques-repas sont-ils avantageux pour le travailleur ?",opts:["Parce qu'ils remplacent le salaire brut","Parce qu'ils sont exonérés de cotisations ONSS et d'impôts","Parce qu'ils augmentent le précompte professionnel","Parce qu'ils comptent pour la pension"],correct:1,explain:"Les chèques-repas sont exonérés d'ONSS et d'impôts si les conditions légales sont respectées. C'est un gain net réel pour le travailleur."},
+  {q:"Un « avantage toute nature » (ATN), c'est :",opts:["Un bonus en espèces","Un avantage que le travailleur peut aussi utiliser à des fins privées","Un jour de congé supplémentaire","Une formation offerte par l'employeur"],correct:1,explain:"Un ATN est un avantage (voiture, GSM, PC…) utilisable aussi à titre privé. Il est valorisé et diminue le salaire net."},
+  {q:"Emma perçoit des frais de représentation de 125 €. Ces frais sont-ils soumis à l'ONSS ou au PP ?",opts:["Oui, aux deux","Uniquement à l'ONSS","Uniquement au PP","Non, ni à l'ONSS, ni au PP"],correct:3,explain:"Les frais de représentation d'Emma figurent dans la colonne « Hors PP » de sa fiche. Ils ne sont soumis ni à l'ONSS ni au précompte professionnel."}
+],
+2:[
+  {q:"Combien de jours de congé payés par an pour un temps plein ?",opts:["10","15","20","25"],correct:2,explain:"20 jours de congé payés par an en régime 5 jours/semaine."},
+  {q:"Les congés dépendent de :",opts:["L'ancienneté dans l'entreprise","Les prestations de l'année précédente","Le bon vouloir de l'employeur","Le nombre de jours fériés"],correct:1,explain:"Les congés de l'année N dépendent des mois prestés l'année N−1."},
+  {q:"Qui paie les congés d'un ouvrier ?",opts:["L'employeur directement","L'ONVA","L'ONEM","La mutuelle"],correct:1,explain:"Pour les ouvriers, c'est l'ONVA (Office National des Vacances Annuelles). Pour les employés, l'employeur paie directement."},
+  {q:"Combien de jours fériés légaux par an en Belgique ?",opts:["5","8","10","12"],correct:2,explain:"10 jours fériés légaux par an, rémunérés par l'employeur."},
+  {q:"Les vacances jeunes sont financées par :",opts:["L'employeur","L'ONVA","L'ONEM","La mutuelle"],correct:2,explain:"L'ONEM verse 65 % du salaire plafonné pour les vacances jeunes (après précompte de 10,09 %)."}
+],
+3:[
+  {q:"Emma et Hugo ont commencé le 01/11/2017. Combien de mois ont-ils presté fin 2017 ?",opts:["1 mois","2 mois","3 mois","6 mois"],correct:1,explain:"Novembre et décembre = 2 mois prestés."},
+  {q:"D'après le tableau, combien de jours de congé en 2018 pour 2 mois prestés (régime 5 jours) ?",opts:["2 jours","4 jours","5 jours","10 jours"],correct:1,explain:"Le tableau indique 4 jours pour 2 mois prestés en régime 5 jours."},
+  {q:"Un travailleur a presté 5 mois en 2025. Combien de jours de congé aura-t-il en 2026 (régime 5 jours) ?",opts:["5 jours","7 jours","9 jours","10 jours"],correct:2,explain:"D'après le tableau : 5 mois prestés = 9 jours de congé en régime 5 jours/semaine."},
+  {q:"Chez Belvas, quand les congés peuvent-ils être pris ?",opts:["N'importe quand","Uniquement en août","Du lendemain de Pâques au 31 août","Pendant les vacances scolaires"],correct:2,explain:"Le règlement de Belvas impose : congés entre le lendemain de Pâques et le 31 août inclus."},
+  {q:"Pourquoi Emma et Hugo pourront-ils bénéficier des « vacances jeunes » ?",opts:["Parce qu'ils ont moins de 30 ans","Parce que leur droit aux congés est incomplet et qu'ils ont < 25 ans","Parce que l'employeur l'impose","Parce qu'ils sont étudiants"],correct:1,explain:"Ils ont terminé leurs études, ont < 25 ans, et leur droit aux congés est incomplet (seulement 4 jours au lieu de 20)."},
+  {q:"Un travailleur a presté 8 mois en 2025 en régime 5 jours. Combien de jours de congé en 2026 ?",opts:["12 jours","14 jours","16 jours","17 jours"],correct:1,explain:"D'après le tableau : 8 mois prestés en régime 5 jours = 14 jours de congé."}
+],
+4:[
+  {q:"L'inflation, c'est :",opts:["Une baisse des prix","Une hausse généralisée et persistante des prix","La stagnation économique","L'augmentation des salaires"],correct:1,explain:"L'inflation est une hausse généralisée et persistante des prix."},
+  {q:"Si salaire stable + inflation → ton pouvoir d'achat :",opts:["Augmente","Reste stable","Diminue","Disparaît"],correct:2,explain:"Même salaire + prix en hausse = tu achètes moins = pouvoir d'achat en baisse."},
+  {q:"Quels pays ont l'indexation automatique des salaires ?",opts:["France et Allemagne","Belgique et Luxembourg","Tous les pays de l'UE","USA et Canada"],correct:1,explain:"Seuls la Belgique et le Luxembourg pratiquent l'indexation automatique des salaires."},
+  {q:"Un « saut d'index », c'est :",opts:["Une augmentation double","Le fait de sauter une augmentation liée à l'inflation","Un bonus exceptionnel","Un changement de barème"],correct:1,explain:"Le saut d'index gèle les salaires en ne répercutant pas une indexation prévue."},
+  {q:"L'indice santé exclut du calcul de l'inflation :",opts:["Les loyers et l'énergie","L'alcool, le tabac et les produits pétroliers","Les produits alimentaires","Les vêtements et l'électronique"],correct:1,explain:"L'indice santé exclut alcool, tabac et produits pétroliers pour modérer l'impact sur l'indexation."}
+]};
+
+// ============================================================
+// INIT & NAV
+// ============================================================
+function init(){renderNav();renderLevelList();renderAllQuizzes();initSchema();showEmailModal()}
+function renderNav(){const nav=document.getElementById('navBar');nav.innerHTML='';const lb=['🏠','1','2','3','4','5','6','7','🏁'];for(let i=0;i<=TOTAL_EX+1;i++){const d=document.createElement('div');d.className='nav-dot';const isR=i===TOTAL_EX+1;const isL=i>=2&&!APP.completed.has(i-1);if(isR&&APP.completed.size<TOTAL_EX)d.classList.add('locked');else if(isL)d.classList.add('locked');if(i===APP.currentScreen)d.classList.add('active');else if(APP.completed.has(i))d.classList.add('completed');d.textContent=lb[i]||i;if(!d.classList.contains('locked'))d.onclick=()=>goToExercise(isR?TOTAL_EX+1:i);nav.appendChild(d)}}
+function renderLevelList(){const c=document.getElementById('levelList');c.innerHTML='';for(let i=1;i<=TOTAL_EX;i++){const ex=EXERCISES[i],done=APP.completed.has(i),lk=i>=2&&!APP.completed.has(i-1);const d=document.createElement('div');d.style.cssText=`display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:10px;background:${done?'rgba(34,214,138,0.08)':lk?'rgba(255,255,255,0.02)':'var(--bg3)'};border:1px solid ${done?'rgba(34,214,138,0.2)':'var(--border)'};opacity:${lk?'0.5':'1'};cursor:${lk?'not-allowed':'pointer'};margin-bottom:8px;`;d.innerHTML=`<span style="font-size:1.1rem;">${done?'✅':lk?'🔒':'📝'}</span><span style="flex:1;font-weight:600;font-size:0.85rem;">${ex.title}</span><span style="font-size:0.72rem;color:var(--text2);">${ex.maxPoints}pts</span>`;if(!lk)d.onclick=()=>goToExercise(i);c.appendChild(d)}}
+function goToExercise(idx){if(idx>=2&&idx<=TOTAL_EX&&!APP.completed.has(idx-1))return;if(idx===TOTAL_EX+1&&APP.completed.size<TOTAL_EX)return;document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));const scr=document.getElementById('screen-'+(idx>TOTAL_EX?TOTAL_EX+1:idx));if(scr)scr.classList.add('active');APP.currentScreen=idx;renderNav();if(idx===TOTAL_EX+1)showResults();if(idx>=1&&idx<=TOTAL_EX&&!APP.completedExercises.includes(idx))startExerciseTimer(idx);window.scrollTo({top:0,behavior:'smooth'})}
+function updateScoreBadge(){document.getElementById('scoreBadge').textContent='⭐ '+APP.score+' pts'}
+function updateEmailDisplay(){const el=document.getElementById('emailDisplay');if(APP.email)el.innerHTML='📧 <strong>'+APP.email+'</strong>'+(APP.classe?' — '+APP.classe:'')}
+
+// ============================================================
+// QUIZ ENGINE
+// ============================================================
+function renderAllQuizzes(){Object.keys(QUIZZES).forEach(k=>renderQuiz(parseInt(k)))}
+function renderQuiz(ex){const c=document.getElementById('quiz'+ex);if(!c)return;c.innerHTML='';QUIZZES[ex].forEach((q,qi)=>{const b=document.createElement('div');b.className='question-block';b.id=`q${ex}_${qi}`;let h=`<div class="question-number">Q${qi+1}</div><div class="question-text">${q.q}</div>`;q.opts.forEach((o,oi)=>{h+=`<button class="option-btn" onclick="selOpt(${ex},${qi},${oi},this)">${o}</button>`});h+=`<div class="feedback" id="fb${ex}_${qi}"></div>`;b.innerHTML=h;c.appendChild(b)})}
+const qS={};
+function selOpt(ex,qi,oi,btn){const k=ex+'_'+qi;if(qS[k]&&qS[k].locked)return;document.getElementById(`q${ex}_${qi}`).querySelectorAll('.option-btn').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');qS[k]={oi,locked:false}}
+function checkQuiz(ex){if(APP.completedExercises.includes(ex))return;const qs=QUIZZES[ex];let cor=0;qs.forEach((q,qi)=>{const k=ex+'_'+qi,sel=qS[k],bl=document.getElementById(`q${ex}_${qi}`),fb=document.getElementById(`fb${ex}_${qi}`),btns=bl.querySelectorAll('.option-btn');btns.forEach(b=>{b.disabled=true;b.classList.remove('selected')});if(sel&&sel.oi===q.correct){btns[q.correct].classList.add('correct');fb.className='feedback correct show';fb.textContent='✅ '+q.explain;cor++}else{if(sel)btns[sel.oi].classList.add('wrong');btns[q.correct].classList.add('correct');fb.className='feedback wrong show';fb.textContent='❌ '+q.explain}if(sel)sel.locked=true});const pts=Math.round((cor/qs.length)*EXERCISES[ex].maxPoints);APP.score+=pts;updateScoreBadge();document.getElementById(`ex${ex}Check`).disabled=true;completeExercise(ex,pts)}
+
+// ============================================================
+// SCHEMA EXERCISE (Level 5)
+// ============================================================
+const SCHEMA_TERMS=["Salaire coût","Cotisations patronales","Salaire brut","Cotisations personnelles","Salaire imposable","Précompte professionnel","Salaire net"];
+function initSchema(){const c=document.getElementById('schemaTagsContainer');c.innerHTML='';[...SCHEMA_TERMS].sort(()=>Math.random()-0.5).forEach(tag=>{const b=document.createElement('button');b.className='match-item match-tag';b.textContent=tag;b.onclick=()=>{c.querySelectorAll('.match-tag').forEach(x=>x.classList.remove('selected-tag'));b.classList.add('selected-tag');APP.selectedSchemaTag={btn:b,tag}};c.appendChild(b)});document.querySelectorAll('.match-zone').forEach(dz=>{dz.textContent='?';dz.classList.remove('zone-filled','zone-correct','zone-wrong');delete dz.dataset.placed;dz.onclick=()=>{if(dz.classList.contains('zone-correct'))return;if(APP.selectedSchemaTag){if(dz.dataset.placed)retSchTag(dz.dataset.placed);dz.textContent=APP.selectedSchemaTag.tag;dz.classList.add('zone-filled');dz.dataset.placed=APP.selectedSchemaTag.tag;APP.selectedSchemaTag.btn.style.display='none';APP.selectedSchemaTag=null;document.querySelectorAll('.match-tag').forEach(x=>x.classList.remove('selected-tag'));return}if(dz.dataset.placed){retSchTag(dz.dataset.placed);dz.textContent='?';dz.classList.remove('zone-filled');delete dz.dataset.placed}}})}
+function retSchTag(tag){document.querySelectorAll('#schemaTagsContainer .match-tag').forEach(b=>{if(b.textContent===tag&&b.style.display==='none'){b.style.display='';b.classList.remove('selected-tag')}})}
+function checkSchema(){if(APP.completedExercises.includes(5))return;let cor=0;const zones=document.querySelectorAll('.match-zone'),total=zones.length;zones.forEach(dz=>{const p=dz.dataset.placed||'',a=dz.dataset.answer;dz.onclick=null;dz.style.cursor='default';if(p===a){dz.classList.add('zone-correct');cor++}else{dz.classList.add('zone-wrong');dz.innerHTML=p?`<span style="text-decoration:line-through;opacity:0.5;font-size:0.72rem;">${p}</span><br><span style="color:var(--accent);font-size:0.78rem;">${a}</span>`:`<span style="color:var(--accent);">${a}</span>`}});document.querySelectorAll('#schemaTagsContainer button').forEach(b=>b.style.display='none');const pts=Math.round((cor/total)*EXERCISES[5].maxPoints);APP.score+=pts;updateScoreBadge();const fb=document.getElementById('ex5Feedback');fb.innerHTML=`<div class="feedback ${cor===total?'correct':'wrong'} show">${cor===total?'🎉':'📝'} ${cor}/${total} correct(s). +${pts} pts</div>`;document.getElementById('ex5Check').disabled=true;completeExercise(5,pts)}
+
+// ============================================================
+// PAYSLIP TABLE — 3 ATTEMPTS SYSTEM (Levels 6 & 7)
+// ============================================================
+function checkCalcField(inp){const ans=parseFloat(inp.dataset.answer);const tol=parseFloat(inp.dataset.tolerance)||1;const val=parseFloat(inp.value.replace(',','.').replace(/\s/g,''));if(isNaN(val))return false;return Math.abs(val-ans)<=tol}
+
+function checkPayslipTable(who){
+  const exIdx=who==='emma'?6:7;
+  if(APP.completedExercises.includes(exIdx))return;
+  const tracker=payslipAttempts[who];
+  if(tracker.done)return;
+  const fields=document.querySelectorAll(`.${who}-field`);
+  const fb=document.getElementById(`${who}Feedback`);
+  let allCorrect=true;let correctCount=0;
+
+  fields.forEach(inp=>{
+    if(inp.classList.contains('correct')){correctCount++;return} // already locked correct
+    const ok=checkCalcField(inp);
+    if(ok){inp.className='calc-input correct';inp.readOnly=true;correctCount++}
+    else{inp.className='calc-input wrong';allCorrect=false}
+  });
+
+  if(allCorrect||tracker.current>=tracker.max){
+    // Final attempt or all correct
+    tracker.done=true;
+    if(!allCorrect){
+      // Show answers for remaining wrong fields
+      fields.forEach(inp=>{
+        if(!inp.classList.contains('correct')){
+          inp.className='calc-input wrong';inp.readOnly=true;
+          let hint=inp.parentElement.querySelector('.answer-hint');
+          if(!hint){hint=document.createElement('div');hint.className='answer-hint';hint.style.cssText='font-size:0.72rem;color:var(--accent);margin-top:2px;font-family:"Space Mono",monospace;';inp.parentElement.appendChild(hint)}
+          hint.textContent='→ '+inp.dataset.label+' €';
+        }
+      });
+    }
+    // Calculate points: 100% if attempt 1, 50% otherwise
+    const pctMultiplier=tracker.current===1?1:0.5;
+    let pts=Math.round((correctCount/fields.length)*EXERCISES[exIdx].maxPoints*pctMultiplier);
+    if(isNaN(pts))pts=0;
+    APP.score+=pts;updateScoreBadge();
+    fb.innerHTML=`<div class="feedback ${allCorrect?'correct':'wrong'} show">${allCorrect?'🎉 Parfait !':'📝 Fin des tentatives.'} ${correctCount}/${fields.length} correct(s). +${pts} pts${tracker.current>1?' (×50%)':''}</div>`;
+    document.getElementById(`ex${exIdx}Check`).disabled=true;
+    completeExercise(exIdx,pts);
+  } else {
+    // More attempts available
+    tracker.current++;
+    document.getElementById(`${who}Attempts`).textContent=`Tentative ${tracker.current}/${tracker.max}`;
+    const remaining=fields.length-correctCount;
+    fb.innerHTML=`<div class="feedback info">${correctCount}/${fields.length} correct(s). Il te reste <strong>${remaining}</strong> champ(s) à corriger. Tentative ${tracker.current}/${tracker.max}.</div>`;
+    // Reset wrong fields to neutral for re-editing
+    setTimeout(()=>{fields.forEach(inp=>{if(inp.classList.contains('wrong'))inp.className='calc-input neutral'})},1500);
+  }
+}
+
+// ============================================================
+// COMPLETE EXERCISE + NEXT BUTTON
+// ============================================================
+function completeExercise(idx,points){if(APP.completedExercises.includes(idx))return;APP.completedExercises.push(idx);APP.completed.add(idx);const r=stopExerciseTimer(idx);if(r)sendResult(EXERCISES[idx].title,points,EXERCISES[idx].maxPoints,r.temps);renderNav();renderLevelList();const scr=document.getElementById('screen-'+idx);if(scr){const old=scr.querySelector('.next-level-btn');if(old)old.remove();const nb=document.createElement('div');nb.className='next-level-btn';nb.style.cssText='text-align:center;margin-top:20px;animation:fadeIn 0.4s ease;';const isL=idx>=TOTAL_EX;nb.innerHTML=`<button class="btn btn-primary" onclick="goToExercise(${isL?TOTAL_EX+1:idx+1})" style="font-size:1rem;padding:14px 32px;">${isL?'🏁 Voir mes résultats':'➡️ Niveau suivant'}</button>`;scr.appendChild(nb)}}
+
+// ============================================================
+// RESULTS + RESTART
+// ============================================================
+function showResults(){const score=isNaN(APP.score)?0:APP.score;const pct=Math.round((score/APP.maxScore)*100);document.getElementById('resultPct').textContent=pct+'%';document.getElementById('resultCircle').style.border=`4px solid ${pct>=80?'var(--accent)':pct>=50?'var(--orange)':'var(--red)'}`;document.getElementById('resultPct').style.color=pct>=80?'var(--accent)':pct>=50?'var(--orange)':'var(--red)';document.getElementById('resultEmoji').textContent=pct>=80?'🏆':pct>=50?'💪':'📚';document.getElementById('resultDetails').innerHTML=`<div style="font-size:0.9rem;color:var(--text2);">Score : <strong style="color:var(--accent);">${score}</strong> / ${APP.maxScore}<br>Niveaux : <strong>${APP.completed.size}</strong> / ${TOTAL_EX}</div>`}
+
+function restartGame(){TRACKING.sessionId=new Date().toISOString();APP.score=0;APP.completed=new Set();APP.completedExercises=[];APP.exerciseTimes={};APP.exerciseScores={};APP.scoreBeforeExercise=0;APP.globalTimerStart=Date.now();APP.selectedSchemaTag=null;Object.keys(qS).forEach(k=>delete qS[k]);payslipAttempts.emma={current:1,max:3,done:false};payslipAttempts.hugo={current:1,max:3,done:false};document.getElementById('emmaAttempts').textContent='Tentative 1/3';document.getElementById('hugoAttempts').textContent='Tentative 1/3';updateScoreBadge();renderAllQuizzes();initSchema();document.querySelectorAll('.calc-input').forEach(i=>{i.value='';const keep=[];if(i.classList.contains('emma-field'))keep.push('emma-field');if(i.classList.contains('hugo-field'))keep.push('hugo-field');i.className='calc-input'+(keep.length?' '+keep.join(' '):'');i.readOnly=false});document.querySelectorAll('.answer-hint').forEach(h=>h.remove());document.querySelectorAll('.feedback').forEach(f=>{f.className='feedback';f.textContent=''});document.querySelectorAll('[id^="ex"][id$="Check"]').forEach(b=>b.disabled=false);document.querySelectorAll('.next-level-btn').forEach(b=>b.remove());setTimeout(initInlineCalcs,100);goToExercise(0)}
+
+// ============================================================
+// TRACKING (email, timers, send, leaderboard)
+// ============================================================
+function showEmailModal(){const o=document.getElementById('emailOverlay');o.style.display='flex';const i=document.getElementById('emailInput');const s=localStorage.getItem('student_email');if(s)i.value=s;i.focus();document.getElementById('emailError').textContent=''}
+function validateEmail(){const input=document.getElementById('emailInput'),btn=document.getElementById('emailBtn'),err=document.getElementById('emailError');const email=input.value.trim().toLowerCase();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){err.textContent='⚠️ Adresse email invalide.';input.style.borderColor='#ff4060';return}btn.textContent='⏳ Vérification…';btn.disabled=true;err.textContent='';input.style.borderColor='';const cb='_ec_'+Date.now();const to=setTimeout(()=>{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();err.textContent='⚠️ Connexion impossible.';btn.textContent='✅ Vérifier et commencer';btn.disabled=false},10000);window[cb]=function(resp){clearTimeout(to);delete window[cb];const s=document.getElementById(cb);if(s)s.remove();btn.textContent='✅ Vérifier et commencer';btn.disabled=false;if(resp&&resp.found){localStorage.setItem('student_email',email);localStorage.setItem('student_classe',resp.classe||'');APP.email=email;APP.classe=resp.classe||'';TRACKING.sessionId=new Date().toISOString();document.getElementById('emailOverlay').style.display='none';startGlobalTimer();updateEmailDisplay()}else{err.textContent="⚠️ Email non enregistré.";input.style.borderColor='#ff4060'}};const s=document.createElement('script');s.id=cb;s.src=`${TRACKING.scriptUrl}?action=check_email&email=${encodeURIComponent(email)}&callback=${cb}`;s.onerror=()=>{clearTimeout(to);delete window[cb];s.remove();err.textContent='⚠️ Erreur serveur.';btn.textContent='✅ Vérifier et commencer';btn.disabled=false};document.body.appendChild(s)}
+function startGlobalTimer(){APP.globalTimerStart=Date.now();const el=document.getElementById('globalTimer');if(el)el.style.display='inline';if(APP.globalTimerInterval)clearInterval(APP.globalTimerInterval);APP.globalTimerInterval=setInterval(updTimer,1000);updTimer()}
+function updTimer(){const el=document.getElementById('globalTimer');if(!el||!APP.globalTimerStart)return;const e=Math.floor((Date.now()-APP.globalTimerStart)/1000);el.textContent='⏱️ '+String(Math.floor(e/60)).padStart(2,'0')+':'+String(e%60).padStart(2,'0')}
+function startExerciseTimer(i){APP.exerciseStartTime=Date.now();APP.scoreBeforeExercise=APP.score||0}
+function stopExerciseTimer(i){if(!APP.exerciseStartTime)return null;const t=Math.round((Date.now()-APP.exerciseStartTime)/1000);APP.exerciseTimes[i]=t;APP.exerciseStartTime=null;return{points:(APP.score||0)-APP.scoreBeforeExercise,temps:t}}
+function sendResult(niveau,points,pointsMax,temps){if(!APP.email)return;fetch(TRACKING.scriptUrl,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},body:JSON.stringify({email:APP.email,classe:APP.classe,app:TRACKING.appName,niveau,points,pointsMax,temps,totalNiveaux:TRACKING.totalNiveaux,sessionId:TRACKING.sessionId})}).catch(e=>console.warn('[T]',e))}
+
+let curLBTab='app';
+function openLB(t){document.getElementById('lbOverlay').style.display='block';switchLBTab(t||'app')}
+function closeLB(){document.getElementById('lbOverlay').style.display='none'}
+function switchLBTab(t){curLBTab=t;const a=document.getElementById('lbTabApp'),g=document.getElementById('lbTabGlobal');if(t==='app'){a.style.background='var(--accent)';a.style.color='#0f1117';g.style.background='transparent';g.style.color='var(--orange)'}else{g.style.background='var(--orange)';g.style.color='#0f1117';a.style.background='transparent';a.style.color='var(--accent)'}fetchLB(t)}
+function fetchLB(t){const c=document.getElementById('lbContent');c.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);">⏳</div>';const act=t==='app'?'leaderboard_app':'leaderboard_global';const cb='_lb_'+Date.now();const to=setTimeout(()=>{delete window[cb];const s=document.getElementById(cb);if(s)s.remove();c.innerHTML='<div style="text-align:center;padding:40px;color:#ff4060;">⚠️ Erreur</div>'},10000);window[cb]=function(r){clearTimeout(to);delete window[cb];const s=document.getElementById(cb);if(s)s.remove();const d=r&&(r.leaderboard||r.data);if(!d||!d.length){c.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2);">🏁 Aucun résultat</div>';return}renderLB(d,t)};let url=`${TRACKING.scriptUrl}?action=${act}&callback=${cb}&mode=last`;if(t==='app')url+=`&app=${encodeURIComponent(TRACKING.appName)}`;if(APP.classe)url+=`&classe=${encodeURIComponent(APP.classe)}`;const s=document.createElement('script');s.id=cb;s.src=url;s.onerror=()=>{clearTimeout(to);delete window[cb];s.remove();c.innerHTML='<div style="text-align:center;padding:40px;color:#ff4060;">⚠️</div>'};document.body.appendChild(s)}
+function renderLB(data,t){const c=document.getElementById('lbContent'),my=(APP.email||'').toLowerCase();if(t==='global'&&data.length>0){data=data.slice().sort((a,b)=>{const pa=a.pct||0,pb=b.pct||0;if(pb!==pa)return pb-pa;return(a.totalTemps||0)-(b.totalTemps||0)});data.forEach((e,i)=>{e.rang=i+1})}const me=data.find(r=>r.email===my);let h=`<h3 style="font-size:1rem;font-weight:700;margin-bottom:16px;">${t==='app'?'🏆 '+TRACKING.appName:'🌍 Général'}${APP.classe?' ('+APP.classe+')':''}</h3>`;if(me){const p=me.pct||0;h+=`<div style="background:rgba(34,214,138,0.08);border:1px solid rgba(34,214,138,0.3);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;justify-content:space-around;text-align:center;flex-wrap:wrap;gap:8px;"><div><div style="font-size:1.2rem;font-weight:800;color:var(--accent);">#${me.rang}</div><div style="font-size:0.68rem;color:var(--text2);">RANG</div></div><div><div style="font-size:1.2rem;font-weight:800;">${me.totalPoints}</div><div style="font-size:0.68rem;color:var(--text2);">PTS</div></div><div><div style="font-size:1.2rem;font-weight:800;color:${p>=80?'#22d68a':p>=50?'#ff8a3d':'#ff4060'};">${p}%</div><div style="font-size:0.68rem;color:var(--text2);">%</div></div></div>`}const m=['🥇','🥈','🥉'];h+='<table style="width:100%;border-collapse:collapse;font-size:0.82rem;"><tr style="border-bottom:1px solid var(--border);"><th style="text-align:left;padding:6px 4px;color:var(--text2);font-size:0.7rem;">#</th><th style="text-align:left;padding:6px 4px;color:var(--text2);font-size:0.7rem;">Élève</th><th style="text-align:right;padding:6px 4px;color:var(--text2);font-size:0.7rem;">Pts</th><th style="text-align:right;padding:6px 4px;color:var(--text2);font-size:0.7rem;">%</th></tr>';data.forEach(row=>{const r=row.rang||0;const nm=row.email.split('@')[0].split(/[._-]/).map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');const p=row.pct||0;const isMe=row.email===my;h+=`<tr style="border-bottom:1px solid rgba(255,255,255,0.03);background:${isMe?'rgba(34,214,138,0.08)':'transparent'};"><td style="padding:6px 4px;font-weight:700;">${r<=3?m[r-1]:r}</td><td style="padding:6px 4px;${isMe?'font-weight:800;color:var(--accent);':''}">${nm}</td><td style="padding:6px 4px;text-align:right;font-weight:700;color:var(--accent);">${row.totalPoints}</td><td style="padding:6px 4px;text-align:right;color:${p>=80?'#22d68a':p>=50?'#ff8a3d':'#ff4060'};">${p}%</td></tr>`});h+='</table>';c.innerHTML=h}
+
+// ============================================================
+// INLINE CALCULATOR
+// ============================================================
+function initInlineCalcs(){document.querySelectorAll('.calc-input').forEach(inp=>{if(inp.parentElement.classList.contains('calc-wrapper'))return;const w=document.createElement('span');w.className='calc-wrapper';inp.parentElement.insertBefore(w,inp);w.appendChild(inp);const p=document.createElement('div');p.className='calc-preview';w.appendChild(p);inp.addEventListener('input',()=>ucp(inp,p));inp.addEventListener('focus',()=>ucp(inp,p));inp.addEventListener('blur',()=>{const v=inp.value.trim();if(v&&/[+\-*/]/.test(v)){try{const n=v.replace(/,/g,'.').replace(/\s/g,'').replace(/×/g,'*').replace(/÷/g,'/');const r=Function('"use strict";return('+n+')')();if(typeof r==='number'&&isFinite(r))inp.value=parseFloat(r.toFixed(2))}catch(e){}}p.classList.remove('visible')})})}
+function ucp(i,p){const v=i.value.trim();if(!v||!/[+\-*/×÷]/.test(v)){p.classList.remove('visible');return}try{const n=v.replace(/,/g,'.').replace(/\s/g,'').replace(/×/g,'*').replace(/÷/g,'/');const r=Function('"use strict";return('+n+')')();if(typeof r==='number'&&isFinite(r)){p.textContent='= '+parseFloat(r.toFixed(2));p.classList.remove('error');p.classList.add('visible')}else{p.textContent='= ?';p.classList.add('error','visible')}}catch(e){p.textContent='= ?';p.classList.add('error','visible')}}
+
+document.addEventListener('DOMContentLoaded',()=>{init();initInlineCalcs()});
+</script>
+</body>
+</html>
